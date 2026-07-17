@@ -1,0 +1,38 @@
+# ============================================================
+# tag-mule - Docker Compose
+# ============================================================
+# network_mode: host es CRÍTICO para que los paquetes mágicos
+# Wake-on-LAN (WoL) salgan correctamente a la red local.
+# WoL opera a nivel de capa 2 (Ethernet) y no funciona con
+# el NAT/bridge de Docker.
+# ============================================================
+
+services:
+  tag-mule:
+    build: .
+    container_name: tag-mule
+    restart: unless-stopped
+    network_mode: host  # Esencial para WoL
+
+    # Mapear el archivo .env desde el host
+    env_file:
+      - .env
+
+    # Montar volumen para persistir archivos JSONL entre reinicios
+    volumes:
+      - ./data:/app/data
+
+    # Variables de entorno por defecto (el .env tiene prioridad)
+    environment:
+      - PROXY_PORT=${PROXY_PORT:-8080}
+
+    # Logging básico con límite de tamaño
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # No expone puertos explícitamente porque network_mode: host
+    # ya comparte la pila de red del host.
+    # El servicio escuchará en el puerto definido por PROXY_PORT.

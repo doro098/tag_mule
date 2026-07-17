@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>tag-mule test</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:monospace;height:100vh;display:flex;flex-direction:column}
+header{background:#111;color:#fff;padding:8px 16px;font-size:13px;border-bottom:2px solid #e94560}
+.wrap{display:flex;flex:1;overflow:hidden}
+.pane{width:50%;padding:16px;display:flex;flex-direction:column;gap:8px;overflow-y:auto}
+.pane:first-child{border-right:2px solid #ddd}
+h3{font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px}
+textarea{width:100%;flex:1;min-height:120px;font-family:monospace;font-size:13px;padding:8px;resize:none;border:1px solid #ccc}
+button{padding:8px 20px;background:#e94560;color:#fff;border:none;font-family:monospace;cursor:pointer;font-weight:bold}
+button:hover{background:#c73650}
+button:disabled{background:#555;cursor:not-allowed}
+#log{font-size:12px;line-height:1.7}
+.line{padding:3px 0;border-bottom:1px solid #eee}
+.line.ok{color:#2a7a2a}
+.line.err{color:#c00}
+.line.dim{color:#888}
+</style>
+</head>
+<body>
+
+<header>tag-mule test</header>
+
+<div class="wrap">
+  <!-- FORMULARIO -->
+  <div class="pane">
+    <h3>input</h3>
+    <textarea id="msg" placeholder="Pegá un link o mensaje..."></textarea>
+    <button id="btn" onclick="enviar()">ENVIAR</button>
+  </div>
+
+  <!-- LOG -->
+  <div class="pane" style="background:#fafafa">
+    <h3>log</h3>
+    <div id="log"></div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+function addLog(text,cls){
+  const d=document.createElement('div');
+  d.className='line '+(cls||'');
+  d.textContent=new Date().toLocaleTimeString('es-AR')+'  '+text;
+  $('log').appendChild(d);
+  $('log').scrollTop=$('log').scrollHeight;
+}
+
+async function enviar(){
+  const msg=$('msg').value.trim();
+  if(!msg){addLog('error: vacio','err');return;}
+  $('btn').disabled=true;
+  $('log').innerHTML='';
+
+  try{
+    // enviar
+    addLog('POST /api/enviar ...');
+    const r=await fetch('/api/enviar',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({mensaje:msg})
+    });
+    const data=await r.json();
+    if(!r.ok) throw new Error(data.error||r.status);
+    const id=data.id;
+    addLog('id='+id+'  status=pending','ok');
+
+    // polling
+    const poll=setInterval(async()=>{
+      try{
+        const r2=await fetch('/api/estado/'+id);
+        const s=await r2.json();
+
+        let extra='';
+        if(s.error) extra='  ERR: '+s.error;
+        else if(s.resultado) extra='  → '+s.resultado;
+        else if(s.batch_id) extra='  batch='+s.batch_id;
+        else if(s.file_id) extra='  file='+s.file_id;
+
+        const cls=s.status==='done'?'ok':s.error||s.status==='error'||s.status==='failed'?'err':'dim';
+        addLog('status='+s.status+extra,cls);
+
+        if(['done','error','failed','expired'].includes(s.status)){
+          clearInterval(poll);
+          $('btn').disabled=false;
+        }
+      }catch(e){
+        addLog('poll error: '+e.message,'err');
+      }
+    },2000);
+
+  }catch(e){
+    addLog('ERROR: '+e.message,'err');
+    $('btn').disabled=false;
+  }
+}
+</script>
+</body>
+</html>
