@@ -2,103 +2,214 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<title>tag-mule test</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>tag-mule · test</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:monospace;height:100vh;display:flex;flex-direction:column}
-header{background:#111;color:#fff;padding:8px 16px;font-size:13px;border-bottom:2px solid #e94560}
-.wrap{display:flex;flex:1;overflow:hidden}
-.pane{width:50%;padding:16px;display:flex;flex-direction:column;gap:8px;overflow-y:auto}
-.pane:first-child{border-right:2px solid #ddd}
-h3{font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px}
-textarea{width:100%;flex:1;min-height:120px;font-family:monospace;font-size:13px;padding:8px;resize:none;border:1px solid #ccc}
-button{padding:8px 20px;background:#e94560;color:#fff;border:none;font-family:monospace;cursor:pointer;font-weight:bold}
-button:hover{background:#c73650}
-button:disabled{background:#555;cursor:not-allowed}
-#log{font-size:12px;line-height:1.7}
-.line{padding:3px 0;border-bottom:1px solid #eee}
-.line.ok{color:#2a7a2a}
-.line.err{color:#c00}
-.line.dim{color:#888}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0d0d12;color:#e0e0e8;min-height:100vh;display:flex;flex-direction:column}
+header{background:#16161f;border-bottom:1px solid #2a2a3a;padding:12px 20px;display:flex;align-items:center;gap:12px}
+header h1{font-size:15px;font-weight:600;color:#e0e0e8}
+header span.badge{font-size:11px;background:#1e1e2a;color:#8a8aa0;padding:2px 8px;border-radius:4px;border:1px solid #2a2a3a}
+header .info{font-size:11px;color:#5a5a7a;margin-left:auto}
+.main{display:flex;flex:1;overflow:hidden}
+/* Columna izquierda */
+.left{width:50%;display:flex;flex-direction:column;border-right:1px solid #1e1e2a}
+.escenarios{display:flex;gap:6px;padding:12px 16px;background:#11111a;border-bottom:1px solid #1e1e2a;flex-wrap:wrap}
+.esc-btn{padding:6px 14px;border-radius:6px;border:1px solid #2a2a3a;background:transparent;color:#8a8aa0;font-size:12px;cursor:pointer;transition:all .15s;font-weight:500}
+.esc-btn:hover{background:#1e1e2a;color:#e0e0e8;border-color:#4a4a6a}
+.esc-btn.active{background:#3a3a5a;color:#fff;border-color:#6a6a9a}
+.input-area{flex:1;padding:16px;display:flex;flex-direction:column;gap:10px}
+textarea{flex:1;min-height:100px;background:#11111a;border:1px solid #2a2a3a;border-radius:8px;padding:12px;font-family:ui-monospace,monospace;font-size:13px;color:#e0e0e8;resize:none;outline:none;transition:border-color .15s}
+textarea:focus{border-color:#6a6a9a}
+.btn-row{display:flex;gap:8px}
+.btn-send{padding:8px 24px;background:#4a4a8a;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-send:hover{background:#5a5aaa}
+.btn-send:disabled{background:#2a2a3a;color:#5a5a7a;cursor:not-allowed}
+/* Columna derecha */
+.right{width:50%;display:flex;flex-direction:column;background:#0d0d12}
+.log-header{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid #1e1e2a;font-size:11px;color:#5a5a7a;text-transform:uppercase;letter-spacing:.5px}
+.log-header .status-badge{font-size:10px;padding:2px 8px;border-radius:3px}
+.log-header .status-badge.idle{background:#1a1a2a;color:#5a5a7a}
+.log-header .status-badge.running{background:#2a2a4a;color:#8a8aee}
+.log-header .status-badge.done{background:#1a2a1a;color:#5a8a5a}
+.log-header .status-badge.err{background:#2a1a1a;color:#ee5a5a}
+#log{flex:1;overflow-y:auto;padding:8px 16px;font-family:ui-monospace,monospace;font-size:12px;line-height:1.6}
+.log-line{padding:2px 0;border-bottom:1px solid #12121a;color:#8a8aa0}
+.log-line .ts{color:#4a4a6a;margin-right:8px}
+.log-line .tag{display:inline-block;font-size:10px;padding:0 6px;border-radius:3px;margin-right:6px;font-weight:600}
+.log-line .tag.ok{background:#1a2a1a;color:#5a8a5a}
+.log-line .tag.info{background:#1a1a2a;color:#6a6aaa}
+.log-line .tag.err{background:#2a1a1a;color:#ee5a5a}
+.log-line .tag.dim{background:#12121a;color:#4a4a6a}
+.log-line .tag.warn{background:#2a2a1a;color:#aaaa5a}
+.result-box{margin-top:4px;padding:8px 10px;background:#11111a;border-radius:6px;border:1px solid #1e1e2a;color:#b0b0c0;font-size:12px;white-space:pre-wrap;word-break:break-word}
+.result-box .label{font-size:10px;color:#5a5a7a;text-transform:uppercase;margin-bottom:4px}
+.result-box pre{margin:0;font-family:ui-monospace,monospace;font-size:12px;color:#b0b0c0;white-space:pre-wrap}
 </style>
 </head>
 <body>
 
-<header>tag-mule test</header>
+<header>
+  <h1>⛓️ tag-mule</h1>
+  <span class="badge" id="badge-backend">—</span>
+  <span class="info" id="header-info">test</span>
+</header>
 
-<div class="wrap">
-  <!-- FORMULARIO -->
-  <div class="pane">
-    <h3>input</h3>
-    <textarea id="msg" placeholder="Pegá un link o mensaje..."></textarea>
-    <button id="btn" onclick="enviar()">ENVIAR</button>
+<div class="main">
+  <!-- LEFT -->
+  <div class="left">
+    <div class="escenarios" id="escenarios"></div>
+    <div class="input-area">
+      <textarea id="msg" placeholder="Escribí un mensaje o pegá un link..."></textarea>
+      <div class="btn-row">
+        <button class="btn-send" id="btn-send" onclick="enviar()">ENVIAR</button>
+      </div>
+    </div>
   </div>
 
-  <!-- LOG -->
-  <div class="pane" style="background:#fafafa">
-    <h3>log</h3>
+  <!-- RIGHT -->
+  <div class="right">
+    <div class="log-header">
+      <span>log</span>
+      <span class="status-badge idle" id="status-badge">● idle</span>
+      <span style="margin-left:auto;font-weight:400" id="log-counter">0</span>
+    </div>
     <div id="log"></div>
   </div>
 </div>
 
 <script>
-const $=id=>document.getElementById(id);
-function addLog(text,cls){
-  const d=document.createElement('div');
-  d.className='line '+(cls||'');
-  d.textContent=new Date().toLocaleTimeString('es-AR')+'  '+text;
-  $('log').appendChild(d);
-  $('log').scrollTop=$('log').scrollHeight;
-}
+const $ = id => document.getElementById(id);
+let escenarioActual = 'tureparto';
+let polling = null;
 
-async function enviar(){
-  const msg=$('msg').value.trim();
-  if(!msg){addLog('error: vacio','err');return;}
-  $('btn').disabled=true;
-  $('log').innerHTML='';
-
-  try{
-    // enviar
-    addLog('POST /api/enviar ...');
-    const r=await fetch('/api/enviar',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({mensaje:msg})
+// ── Cargar escenarios ────────────────────────────
+async function cargarEscenarios() {
+  try {
+    const r = await fetch('/api/escenarios');
+    const escs = await r.json();
+    const cont = $('escenarios');
+    cont.innerHTML = '';
+    escs.forEach(e => {
+      const btn = document.createElement('button');
+      btn.className = 'esc-btn' + (e.id === escenarioActual ? ' active' : '');
+      btn.textContent = e.label;
+      btn.title = e.desc;
+      btn.dataset.id = e.id;
+      btn.onclick = () => seleccionarEscenario(e.id);
+      cont.appendChild(btn);
     });
-    const data=await r.json();
-    if(!r.ok) throw new Error(data.error||r.status);
-    const id=data.id;
-    addLog('id='+id+'  status=pending','ok');
-
-    // polling
-    const poll=setInterval(async()=>{
-      try{
-        const r2=await fetch('/api/estado/'+id);
-        const s=await r2.json();
-
-        let extra='';
-        if(s.error) extra='  ERR: '+s.error;
-        else if(s.resultado) extra='  → '+s.resultado;
-        else if(s.batch_id) extra='  batch='+s.batch_id;
-        else if(s.file_id) extra='  file='+s.file_id;
-
-        const cls=s.status==='done'?'ok':s.error||s.status==='error'||s.status==='failed'?'err':'dim';
-        addLog('status='+s.status+extra,cls);
-
-        if(['done','error','failed','expired'].includes(s.status)){
-          clearInterval(poll);
-          $('btn').disabled=false;
-        }
-      }catch(e){
-        addLog('poll error: '+e.message,'err');
-      }
-    },2000);
-
-  }catch(e){
-    addLog('ERROR: '+e.message,'err');
-    $('btn').disabled=false;
+  } catch(e) {
+    console.error(e);
   }
 }
+
+async function cargarConfig() {
+  try {
+    const r = await fetch('/api/config');
+    const cfg = await r.json();
+    $('badge-backend').textContent = cfg.backend + ' · ' + cfg.model;
+  } catch(e) {}
+}
+
+function seleccionarEscenario(id) {
+  escenarioActual = id;
+  document.querySelectorAll('.esc-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.id === id);
+  });
+  addLog(`escenario: ${id}`, 'info');
+}
+
+function addLog(texto, tipo, resultado) {
+  const d = document.createElement('div');
+  d.className = 'log-line';
+  const ts = new Date().toLocaleTimeString('es-AR');
+  d.innerHTML = `<span class="ts">${ts}</span><span class="tag ${tipo || 'dim'}">${tipo || '•'}</span>${texto}`;
+  $('log').appendChild(d);
+
+  if (resultado) {
+    const box = document.createElement('div');
+    box.className = 'result-box';
+    box.innerHTML = `<div class="label">resultado</div><pre>${escapeHtml(resultado)}</pre>`;
+    $('log').appendChild(box);
+  }
+
+  $('log').scrollTop = $('log').scrollHeight;
+  $('log-counter').textContent = $('log').children.length;
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ── Enviar ────────────────────────────────────────
+async function enviar() {
+  const msg = $('msg').value.trim();
+  if (!msg) { addLog('mensaje vacío', 'err'); return; }
+
+  const btn = $('btn-send');
+  btn.disabled = true;
+  $('log').innerHTML = '';
+  $('log-counter').textContent = '0';
+  if (polling) { clearInterval(polling); polling = null; }
+  $('status-badge').className = 'status-badge running';
+  $('status-badge').textContent = '● running';
+
+  try {
+    addLog(`POST /api/enviar  [${escenarioActual}]`, 'info');
+    const r = await fetch('/api/enviar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mensaje: msg, escenario: escenarioActual }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || r.status);
+    const id = data.id;
+    addLog(`id=${id}  escenario=${escenarioActual}`, 'ok');
+
+    // Polling
+    polling = setInterval(async () => {
+      try {
+        const r2 = await fetch('/api/estado/' + id);
+        const s = await r2.json();
+
+        let extra = '';
+        let tipo = 'dim';
+        if (s.error) { extra = '  ERR: ' + s.error; tipo = 'err'; }
+        else if (s.resultado) { extra = ''; tipo = 'ok'; }
+        else if (s.batch_id) { extra = '  batch=' + s.batch_id; tipo = 'info'; }
+        else if (s.file_id) { extra = '  file=' + s.file_id; tipo = 'info'; }
+
+        if (s.status === 'done') tipo = 'ok';
+        else if (['error','failed'].includes(s.status)) tipo = 'err';
+
+        addLog(`status=${s.status}${extra}`, tipo, s.resultado || null);
+
+        if (['done','error','failed','expired'].includes(s.status)) {
+          clearInterval(polling);
+          polling = null;
+          btn.disabled = false;
+          $('status-badge').className = s.status === 'done' ? 'status-badge done' : 'status-badge err';
+          $('status-badge').textContent = s.status === 'done' ? '● done' : '● error';
+        }
+      } catch(e) {
+        addLog('poll error: ' + e.message, 'err');
+      }
+    }, 2000);
+
+  } catch(e) {
+    addLog('ERROR: ' + e.message, 'err');
+    btn.disabled = false;
+    $('status-badge').className = 'status-badge err';
+    $('status-badge').textContent = '● error';
+  }
+}
+
+// ── Init ──────────────────────────────────────────
+cargarEscenarios();
+cargarConfig();
 </script>
 </body>
 </html>

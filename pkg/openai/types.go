@@ -7,6 +7,7 @@ import (
 // Config contiene toda la configuración del servicio,
 // leída de variables de entorno.
 type Config struct {
+	DBPath             string
 	TorreIP            string
 	TorreMAC           string
 	SSHUser            string
@@ -18,6 +19,7 @@ type Config struct {
 	WakeTimeout        time.Duration
 	SuspendDelay       time.Duration
 	WakePollInterval   time.Duration
+	SuspendEnabled     bool
 }
 
 // --- Estructuras de la API de OpenAI (compatibilidad) ---

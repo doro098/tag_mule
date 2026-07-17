@@ -575,11 +575,11 @@ func scheduleSuspend(cfg *Config) {
 // Si llega a cero y no se usa proveedor externo, programa la
 // suspensión de la torre después del tiempo de cortesía.
 func (h *BatchHandler) decrementAndMaybeSchedule() {
-        if atomic.AddInt32(&activeBatches, -1) == 0 {
-                if !h.cfg.UseExternalProvider {
-                        scheduleSuspend(h.cfg)
-                }
-        }
+	if atomic.AddInt32(&activeBatches, -1) == 0 {
+		if !h.cfg.UseExternalProvider && h.cfg.SuspendEnabled {
+			scheduleSuspend(h.cfg)
+		}
+	}
 }
 
 // suspendTower ejecuta el comando SSH para suspender la torre Debian.

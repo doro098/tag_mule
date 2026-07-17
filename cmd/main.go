@@ -1,3 +1,4 @@
+
 // tag-mule: Gateway/Proxy de Inteligencia Artificial unificado.
 //
 // Este microservicio headless en Go implementa compatibilidad con la
@@ -42,22 +43,7 @@ func main() {
 	// -----------------------------------------------------------------------
 	// 2. Validación de configuración esencial
 	// -----------------------------------------------------------------------
-	if !cfg.UseExternalProvider {
-		if strings.TrimSpace(cfg.TorreMAC) == "" {
-			slog.Error("TORRE_MAC es obligatorio cuando USE_EXTERNAL_PROVIDER=false")
-			os.Exit(1)
-		}
-		if strings.TrimSpace(cfg.TorreIP) == "" {
-			slog.Error("TORRE_IP es obligatorio cuando USE_EXTERNAL_PROVIDER=false")
-			os.Exit(1)
-		}
-		slog.Info("modo: hardware local (Ollama + WoL)",
-			"torre_ip", cfg.TorreIP,
-			"torre_mac", cfg.TorreMAC,
-			"ssh_user", cfg.SSHUser,
-			"ollama_port", cfg.OllamaPort,
-		)
-	} else {
+	if cfg.UseExternalProvider {
 		if strings.TrimSpace(cfg.ExternalAPIURL) == "" {
 			slog.Error("EXTERNAL_API_URL es obligatorio cuando USE_EXTERNAL_PROVIDER=true")
 			os.Exit(1)
@@ -65,12 +51,46 @@ func main() {
 		slog.Info("modo: proveedor externo",
 			"api_url", cfg.ExternalAPIURL,
 		)
+	} else {
+		if strings.TrimSpace(cfg.TorreIP) == "" {
+			slog.Error("TORRE_IP es obligatorio cuando USE_EXTERNAL_PROVIDER=false")
+			os.Exit(1)
+		}
+
+		wolMsg := "desactivado"
+		if strings.TrimSpace(cfg.TorreMAC) != "" {
+			wolMsg = cfg.TorreMAC
+		}
+
+		slog.Info("modo: Ollama local",
+			"ollama_host", cfg.TorreIP,
+			"ollama_port", cfg.OllamaPort,
+			"wol", wolMsg,
+		)
 	}
 
 	// -----------------------------------------------------------------------
-	// 3. Crear almacenamiento en memoria
+	// 3. Crear almacenamiento persistente (SQLite)
 	// -----------------------------------------------------------------------
-	store := storage.NewMemoryStore()
+	dbPath := cfg.DBPath
+
+	// Asegurar que el directorio existe
+	if lastSlash := strings.LastIndex(dbPath, "/"); lastSlash >= 0 {
+		dir := dbPath[:lastSlash]
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			slog.Error("no se pudo crear el directorio de datos", "dir", dir, "error", err)
+			os.Exit(1)
+		}
+	}
+
+	store, err := storage.NewSQLiteStore(dbPath)
+	if err != nil {
+		slog.Error("no se pudo inicializar la base de datos", "path", dbPath, "error", err)
+		os.Exit(1)
+	}
+	defer store.Close()
+
+	slog.Info("almacenamiento SQLite listo", "path", dbPath)
 
 	// -----------------------------------------------------------------------
 	// 4. Crear handlers
@@ -100,6 +120,8 @@ func main() {
 	slog.Info("tag-mule iniciando",
 		"listen", addr,
 		"version", "1.0.0",
+		"storage", "sqlite",
+		"db_path", dbPath,
 	)
 
 	if err := http.ListenAndServe(addr, loggingMiddleware(mux)); err != nil {
@@ -114,6 +136,7 @@ func main() {
 // -----------------------------------------------------------------------
 func buildConfig() *openai.Config {
 	return &openai.Config{
+		DBPath:             env.GetOrDefault("DB_PATH", "./data/tag-mule.db"),
 		TorreIP:            env.GetOrDefault("TORRE_IP", "192.168.1.100"),
 		TorreMAC:           env.GetOrDefault("TORRE_MAC", ""),
 		SSHUser:            env.GetOrDefault("SSH_USER", "root"),
@@ -125,6 +148,7 @@ func buildConfig() *openai.Config {
 		WakeTimeout:        time.Duration(env.GetIntOrDefault("WAKE_TIMEOUT", 600)) * time.Second,
 		SuspendDelay:       time.Duration(env.GetIntOrDefault("SUSPEND_DELAY", 120)) * time.Second,
 		WakePollInterval:   time.Duration(env.GetIntOrDefault("WAKE_POLL_INTERVAL", 2)) * time.Second,
+		SuspendEnabled:     env.GetBoolOrDefault("SUSPEND_ENABLED", false),
 	}
 }
 

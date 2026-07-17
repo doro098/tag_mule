@@ -1,0 +1,13 @@
+.git/
+.gitignore
+*.db
+*.log
+.DS_Store
+README.md
+docker-compose.yml
+servidor.py
+testcliente.py
+ejemplo.html
+db.db
+.env
+.env.example
